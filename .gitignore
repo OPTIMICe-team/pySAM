@@ -1,0 +1,6 @@
+collection
+aggregation
+melting
+*.dat
+*.vtk
+obj/
