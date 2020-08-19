@@ -17,10 +17,14 @@ make aggregation
 ## Python tools
 Hopefully one day I will make a python interface to all the components so that recompilation won't be necessary anymore
 
+Other tools to be added soon might include an easier visualization tool (based on vtk or mayavi) and the python interface to the surface to volume shapefile converter (basically a point in polyhedron algorithm)
+
 ## Caveats
 The stocastic engine has a random number generator intiated with some function of the current time so every execution will produce slightly different results.
+
 The output files will likely be overwritten or mixed up, so move the output of previous execution separately if you want to keep them
 
 ## Limitations
 The melting part is still missing, I have to edit it
+
 The code does not include riming... if I ever implement that we could rename the project Melting and Aggregation of (potentially) Rimed Snowflakes (MARS). Let's se if I manage to get to MARS before NASA
