@@ -12,7 +12,7 @@ import numpy as np
 from matplotlib import colors
 from mayavi import mlab
 
-data = np.loadtxt('../67_0.992257_1.96799e-05.dat')#, dtype=int)
+data = np.loadtxt('../57_1.11595_1.78306e-05.dat')#, dtype=int)
 
 def visualize(X, bgcolor=(1,1,1), fgcolor=(.8,.8,.8)):
 	"""Visualize the aggregate using Mayavi.
@@ -34,7 +34,6 @@ def visualize(X, bgcolor=(1,1,1), fgcolor=(.8,.8,.8)):
 	ident = np.unique(X[:, 3])
 	for i, ID in enumerate(ident):
 		x = X[X[:, 3]==ID]
-		print(x)
 		mlab.points3d(x[:,0], x[:,1], x[:,2],
 				      color=color_list[i%len(color_list)],
 				      mode="cube", scale_factor=1)

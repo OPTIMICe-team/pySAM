@@ -1,0 +1,18 @@
+mayavi is quite difficult to install. But the current package shipped with pip3 is working fine with python3
+One bad thing about mayavi is that it does not give you many error messages. Try to run the mayavi2 application to see if at least the mayavi environment can load
+
+To use mayavi in a python script you have to activate either the qt or the wx backend, for example on ipython do
+ipython3 --gui=qt
+see https://docs.enthought.com/mayavi/mayavi/mlab.html#simple-scripting-with-mlab
+
+pyqt5 is buggy! It puts surfaces one on top of each other depending on the drawing order and not what is actually on top. THis results in bad image quality.
+The workaround is to force using pyQt4
+Install it (Ubuntu 18.04 still have it in the system packages python3-pyQt4)
+Load some environment variables and launch ipython with qt4 backend
+export ETS_TOOLKIT=qt4
+export QT_API=pyqt
+ipython3 --gui=qt4
+
+wx probably works as well, but I still have to check it
+
+for simple python scripting and execution loading env vars is enough
