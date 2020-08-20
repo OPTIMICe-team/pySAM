@@ -3,4 +3,6 @@ aggregation
 melting
 *.dat
 *.vtk
+*.png
+*.pyc
 obj/
