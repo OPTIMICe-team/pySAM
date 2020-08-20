@@ -128,7 +128,6 @@ void population::make_collision(double d) {
 	get_collision_couple();
 	time(&timer_stop);
 	seconds=difftime(timer_stop,timer_start);
-//	cout<<"dopo "<<seconds<<" collido "<<CAP_idx<<" e "<<NAP_idx<<endl;
 
 	aggregates[CAP_idx].rotate(10*uniform(gen),10*uniform(gen),10*uniform(gen),2*M_PI*uniform(gen));
 	aggregates[NAP_idx].rotate(10*uniform(gen),10*uniform(gen),10*uniform(gen),2*M_PI*uniform(gen));
@@ -156,7 +155,6 @@ void population::make_collision(double d) {
 
 	time(&timer_stop);
 	seconds=difftime(timer_stop,timer_start);
-//	cout<<"Dopo "<<seconds<<" ho finito di collidere"<<endl;
 
 	aggregates[CAP_idx].update_mic();
 	aggregates[CAP_idx].update_maximum_dimension();
@@ -239,7 +237,7 @@ vector<vector<double> > population::get_hystogram(double bin_size) {
 	}
 	unsigned int index=0;
 	ostringstream counter,bin;
-	counter<<N;
+	counter<<N+1;
 	string pre=counter.str();
 	string prefix;
 	for(int i=0;i<N;i++) {

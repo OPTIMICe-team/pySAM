@@ -171,8 +171,7 @@ void pristine::fill(MatrixX3i& point,double d) {
 	NminZ=floor(minZ/d)-1;
 	NmaxZ=ceil(maxZ/d)+1;
 	int N_point=(NmaxX-NminX)*(NmaxY-NminY)*(NmaxZ-NminZ);
-	point.resize(N_point,3);
-	//cout<<"la dimensione massima è "<<point.rows()<<endl;
+	point.resize(N_point,3); // bounding box
 	N_point=0;
 
 	bool change=false;
@@ -467,9 +466,6 @@ void pristine::fill(MatrixX3i& point,double d) {
 									nearest_faces[1]=nf;
 								}
 							}
-							//if((j==4)&&(i==0))cout<<"le facce vicine sono "<<nearest_faces[0]<<"  e  "<<nearest_faces[1]<<endl;
-							//if((j==-4)&&(i==0))cout<<"faccia "<<nearest_faces[0]<<" nx "<<nx[nearest_faces[0]]<<" ny "<<ny[nearest_faces[0]]<<" nz "<<nz[nearest_faces[0]]<<endl;
-							//if((j==-4)&&(i==0))cout<<"faccia "<<nearest_faces[1]<<" nx "<<nx[nearest_faces[1]]<<" ny "<<ny[nearest_faces[1]]<<" nz "<<nz[nearest_faces[1]]<<endl;
 							dist_nearest_faces.clear();
 							mx0=0.;
 							my0=0.;
@@ -561,35 +557,19 @@ void pristine::fill(MatrixX3i& point,double d) {
 									}
 								}
 							}
-							else
-							{
-								cout<<"Damn edge "<<"NOOOOOOOOOOOO   dot1 "<<dot_prod1<<"  dot2 "<<dot_prod2<<" coord"<<i<<" "<<j<<" "<<k<<endl;
-							}
+							else cout<<"Damn edge  dot1 "<<dot_prod1<<"  dot2 "<<dot_prod2<<" coord"<<i<<" "<<j<<" "<<k<<endl;
 						}  /// qui si chiude l'if(!forced_inside) che sarà cambiato (ora è stato identato)
 					}///agginta questa parentesi per includere l'if di prima nel for su tutti i bordi
 				}  /// qui si chiude l'alert crossing edges
-				//if((j==4)&&(i==0))cout<<"forzato entrare "<<forced_inside<<" forzato uscire "<<forced_outside<<endl;
-				if(alert_crossing_vertexes)
-				{
-					//cout<<i<<" "<<j<<" "<<k<<"    Attraverserò vertici"<<" sono dentro "<<inside<<"  forzo dentro "<<forced_inside<<"   forzo fuori "<<forced_outside<<endl;
-					for(unsigned int ncv=0;ncv<crossing_vertexes.size();ncv++)
-					{
-						//if(((k*d)>vertex(2,crossing_vertexes[ncv]))&&(((k-1)*d)<vertex(2,crossing_vertexes[ncv])))
-						//{
-							// verifica se l'attraversamento costituisce un IN o un OUT
-						//}
-						if((k*d)==vertex(2,crossing_vertexes[ncv]))
-						{
-							//cout<<"sono sul vertice"<<endl;
-							forced_inside=true;
-						}
-						else if((!forced_inside)&&(!forced_outside)&&((((k-1)*d)<=vertex(2,crossing_vertexes[ncv]))&&(k*d>vertex(2,crossing_vertexes[ncv]))))
-						{
-				//cout<<"Ho attraversato un vertice"<<endl;
-							dist_nearest_faces.push_back(999999.);
-							dist_nearest_faces.push_back(9999999.);
-							for(int nf=0;nf<N_faces;nf++)
-							{                         
+
+				if(alert_crossing_vertexes) {
+					for(unsigned int ncv=0;ncv<crossing_vertexes.size();ncv++) {
+						if((k*d)==vertex(2,crossing_vertexes[ncv])) forced_inside=true; // I am on a vertex
+						else if((!forced_inside)&&(!forced_outside)&&((((k-1)*d)<=vertex(2,crossing_vertexes[ncv]))&&(k*d>vertex(2,crossing_vertexes[ncv])))) {
+							// I have crossed a vertex
+							dist_nearest_faces.push_back(99999999.);
+							dist_nearest_faces.push_back(999999999.);
+							for(int nf=0;nf<N_faces;nf++) {                         
 								inside_projection=true;
 								t=-(dcoeff[nf]+d*(nx[nf]*i+ny[nf]*j+nz[nf]*k))/(nx[nf]*nx[nf]+ny[nf]*ny[nf]+nz[nf]*nz[nf]);
 								xt=nx[nf]*t+i*d;
@@ -608,8 +588,7 @@ void pristine::fill(MatrixX3i& point,double d) {
 								cross2=P_B.cross(A-B);
 								dot_prod=cross1.dot(cross2);
 								if(dot_prod<0) inside_projection=false;
-								else
-								{
+								else {
 									A=vertex.col(face[nf][face[nf].size()-1]);
 									B=vertex.col(face[nf][0]);
 									C=vertex.col(face[nf][1]);
@@ -618,43 +597,33 @@ void pristine::fill(MatrixX3i& point,double d) {
 									cross2=P_B.cross(A-B);
 									dot_prod=cross1.dot(cross2);
 									if(dot_prod<0) inside_projection=false;
-									else
-									{
-										for(unsigned int nfv=1;nfv<(face[nf].size()-1);nfv++)
-										{
+									else {
+										for(unsigned int nfv=1;nfv<(face[nf].size()-1);nfv++) {
 											A=vertex.col(face[nf][nfv-1]);
 											B=vertex.col(face[nf][nfv]);
 											C=vertex.col(face[nf][nfv+1]);
-									P_B=P-B;
-									cross1=P_B.cross(C-B);
-									cross2=P_B.cross(A-B);
-									dot_prod=cross1.dot(cross2);
-									if(dot_prod<0) inside_projection=false;
+											P_B=P-B;
+											cross1=P_B.cross(C-B);
+											cross2=P_B.cross(A-B);
+											dot_prod=cross1.dot(cross2);
+											if(dot_prod<0) inside_projection=false;
 										}
 									}
 								}
-								//////////////////////////
-								if(inside_projection) // distanza punto piano
-								{
-									//cout<<"Sono dentro la proiezione della faccia "<<nf;
+								if(inside_projection) { // Inside the face projection compute distance point-plane
 									dist_face=pow((nx[nf]*i+ny[nf]*j+nz[nf]*k)*d-dcoeff[nf],2)/(nx[nf]*nx[nf]+ny[nf]*ny[nf]+nz[nf]*nz[nf]);
-									//cout<<"  dalla quale disto "<<dist_face<<endl;
-									if(dist_face<dist_nearest_faces[0])
-									{
+									if(dist_face<dist_nearest_faces[0])	{
 										dist_nearest_faces[1]=dist_nearest_faces[0];
 										nearest_faces[1]=nearest_faces[0];
 										dist_nearest_faces[0]=dist_face;
 										nearest_faces[0]=nf;
 									}
-									else if(dist_face<dist_nearest_faces[1])
-									{
+									else if(dist_face<dist_nearest_faces[1]) {
 										dist_nearest_faces[1]=dist_face;
 										nearest_faces[1]=nf;
 									}
 								}
-								else // distanza punto segmento
-								{
-									//cout<<"Sono fuori dalla proiezione della faccia "<<nf;
+								else { // point segment distance
 									dot_prod1=((vertex(0,face[nf][0])-vertex(0,face[nf][face[nf].size()-1]))*(i*d-vertex(0,face[nf][face[nf].size()-1]))
 											 +(vertex(1,face[nf][0])-vertex(1,face[nf][face[nf].size()-1]))*(j*d-vertex(1,face[nf][face[nf].size()-1]))
 											 +(vertex(2,face[nf][0])-vertex(2,face[nf][face[nf].size()-1]))*(k*d-vertex(2,face[nf][face[nf].size()-1])));
@@ -662,43 +631,21 @@ void pristine::fill(MatrixX3i& point,double d) {
 											 +(vertex(1,face[nf][face[nf].size()-1])-vertex(1,face[nf][0]))*(j*d-vertex(1,face[nf][0]))
 											 +(vertex(2,face[nf][face[nf].size()-1])-vertex(2,face[nf][0]))*(k*d-vertex(2,face[nf][0])));
 									dot_prod=dot_prod1*dot_prod2;
-									//cout<<"è importante conoscere dotprod1 "<<dot_prod1<<" e dotprod2 "<<dot_prod2<<" ma anche dotprod "<<dot_prod<<endl;
-									if(dot_prod>0)
-									{
-										//cout<<"dot_prod è positivo";
+									if(dot_prod>0) {
 										dist_face=(pow(i*d-vertex(0,face[nf][face[nf].size()-1]),2)+pow(j*d-vertex(1,face[nf][face[nf].size()-1]),2)+pow(k*d-vertex(2,face[nf][face[nf].size()-1]),2))
-												 -(dot_prod1*dot_prod1)/(pow(vertex(0,face[nf][0])-vertex(0,face[nf][face[nf].size()-1]),2)+pow(vertex(1,face[nf][0])-vertex(1,face[nf][face[nf].size()-1]),2)+pow(vertex(2,face[nf][0])-vertex(2,face[nf][face[nf].size()-1]),2));
-									//cout<<"  dalla quale disto "<<dist_face<<endl;                                                 
+												 -(dot_prod1*dot_prod1)/(pow(vertex(0,face[nf][0])-vertex(0,face[nf][face[nf].size()-1]),2)+pow(vertex(1,face[nf][0])-vertex(1,face[nf][face[nf].size()-1]),2)+pow(vertex(2,face[nf][0])-vertex(2,face[nf][face[nf].size()-1]),2));                                               
 									}
-									else if(dot_prod<0) // distanza dai vertici
-									{
-										//cout<<"dot_prod è negativo";
+									else if(dot_prod<0) { // distance from the vertexes
 										dist_face=pow(i*d-vertex(0,face[nf][0]),2)+pow(j*d-vertex(1,face[nf][0]),2)+pow(k*d-vertex(2,face[nf][0]),2);
 										dist_provv=pow(i*d-vertex(0,face[nf][face[nf].size()-1]),2)+pow(j*d-vertex(1,face[nf][face[nf].size()-1]),2)+pow(k*d-vertex(2,face[nf][face[nf].size()-1]),2);
-										if(dist_provv<dist_face)
-										{
-											dist_face=dist_provv;
-										}
-									//cout<<"  dalla quale disto "<<dist_face<<endl;                                        
+										if(dist_provv<dist_face) dist_face=dist_provv;
 									}
-									else
-									{
-										//cout<<"dot_prod è nullo"<<endl;                                 
-										if(dot_prod1==0)
-									{
-										dist_face=pow(vertex(0,face[nf][face[nf].size()-1])-i*d,2)+pow(vertex(1,face[nf][face[nf].size()-1])-j*d,2)+pow(vertex(2,face[nf][face[nf].size()-1])-k*d,2);
-									}
-									else if(dot_prod2==0)
-									{
-										dist_face=pow(vertex(0,face[nf][0])-i*d,2)+pow(vertex(1,face[nf][0])-j*d,2)+pow(vertex(2,face[nf][0])-k*d,2);
-									}
-									else
-									{
-										cout<<"PANIC"<<endl;
-									}
+									else {
+										if(dot_prod1==0) dist_face=pow(vertex(0,face[nf][face[nf].size()-1])-i*d,2)+pow(vertex(1,face[nf][face[nf].size()-1])-j*d,2)+pow(vertex(2,face[nf][face[nf].size()-1])-k*d,2);
+										else if(dot_prod2==0) dist_face=pow(vertex(0,face[nf][0])-i*d,2)+pow(vertex(1,face[nf][0])-j*d,2)+pow(vertex(2,face[nf][0])-k*d,2);
+										else cout<<"PANIC"<<endl;
 									}                                    
-									for(unsigned int nfe=1;nfe<face[nf].size();nfe++)
-									{
+									for(unsigned int nfe=1;nfe<face[nf].size();nfe++) {
 										dot_prod1=((vertex(0,face[nf][nfe])-vertex(0,face[nf][nfe-1]))*(i*d-vertex(0,face[nf][nfe-1]))
 												 +(vertex(1,face[nf][nfe])-vertex(1,face[nf][nfe-1]))*(j*d-vertex(1,face[nf][nfe-1]))
 												 +(vertex(2,face[nf][nfe])-vertex(2,face[nf][nfe-1]))*(k*d-vertex(2,face[nf][nfe-1])));
@@ -706,66 +653,39 @@ void pristine::fill(MatrixX3i& point,double d) {
 												 +(vertex(1,face[nf][nfe-1])-vertex(1,face[nf][nfe]))*(j*d-vertex(1,face[nf][nfe]))
 												 +(vertex(2,face[nf][nfe-1])-vertex(2,face[nf][nfe]))*(k*d-vertex(2,face[nf][nfe])));
 										dot_prod=dot_prod1*dot_prod2;
-										//cout<<"è importante conoscere dotprod1 "<<dot_prod1<<" e dotprod2 "<<dot_prod2<<" ma anche dotprod "<<dot_prod<<endl;
-										if(dot_prod>0)
-										{
-											//cout<<"dot_prod è positivo";
+										if(dot_prod>0) {
 											dist_provv=(pow(i*d-vertex(0,face[nf][nfe-1]),2)+pow(j*d-vertex(1,face[nf][nfe-1]),2)+pow(k*d-vertex(2,face[nf][nfe-1]),2))
 												 -(dot_prod1*dot_prod1)/(pow(vertex(0,face[nf][nfe])-vertex(0,face[nf][nfe-1]),2)+pow(vertex(1,face[nf][nfe])-vertex(1,face[nf][nfe-1]),2)+pow(vertex(2,face[nf][nfe])-vertex(2,face[nf][nfe-1]),2));
 										}
-										else if(dot_prod<0) // distanza dai vertici
-										{
-											//cout<<"dot_prod è negativo";
+										else if(dot_prod<0) { // distanza dai vertici
 											dist_prov=pow(i*d-vertex(0,face[nf][nfe]),2)+pow(j*d-vertex(1,face[nf][nfe]),2)+pow(k*d-vertex(2,face[nf][nfe]),2);
 											dist_provv=pow(i*d-vertex(0,face[nf][nfe-1]),2)+pow(j*d-vertex(1,face[nf][nfe-1]),2)+pow(k*d-vertex(2,face[nf][nfe-1]),2);
-											if(dist_prov<dist_provv)
-											{
-												dist_provv=dist_prov;
-											}
+											if(dist_prov<dist_provv) dist_provv=dist_prov;
 										}
-										else
-										{
-											//cout<<"dot_prod è nullo";
-											if(dot_prod1==0)
-										{
-											dist_provv=pow(vertex(0,face[nf][nfe-1])-i*d,2)+pow(vertex(1,face[nf][nfe-1])-j*d,2)+pow(vertex(2,face[nf][nfe-1])-k*d,2);
+										else {
+											if(dot_prod1==0) dist_provv=pow(vertex(0,face[nf][nfe-1])-i*d,2)+pow(vertex(1,face[nf][nfe-1])-j*d,2)+pow(vertex(2,face[nf][nfe-1])-k*d,2);
+											else if(dot_prod2==0) dist_provv=pow(vertex(0,face[nf][nfe])-i*d,2)+pow(vertex(1,face[nf][nfe])-j*d,2)+pow(vertex(2,face[nf][nfe])-k*d,2);
+											else cout<<"PANIC"<<endl;
 										}
-										else if(dot_prod2==0)
-										{
-											dist_provv=pow(vertex(0,face[nf][nfe])-i*d,2)+pow(vertex(1,face[nf][nfe])-j*d,2)+pow(vertex(2,face[nf][nfe])-k*d,2);
-										}
-										else
-										{
-											cout<<"PANIC"<<endl;
-										}
-										}
-										if(dist_provv<dist_face)
-									{
-										dist_face=dist_provv;
-									}
+										if(dist_provv<dist_face) dist_face=dist_provv;
 									}                                    
 								}
-								if(dist_face<dist_nearest_faces[0])
-								{
+								if(dist_face<dist_nearest_faces[0]) {
 									dist_nearest_faces[1]=dist_nearest_faces[0];
 									nearest_faces[1]=nearest_faces[0];
 									dist_nearest_faces[0]=dist_face;
 									nearest_faces[0]=nf;
 								}
-								else if(dist_face<dist_nearest_faces[1])
-								{
+								else if(dist_face<dist_nearest_faces[1]) {
 									dist_nearest_faces[1]=dist_face;
 									nearest_faces[1]=nf;
 								}
 							}
-							//cout<<"distanze "<<dist_nearest_faces[0]<<"  "<<dist_nearest_faces[1]<<endl;
-							//cout<<"facce  "<<nearest_faces[0]<<" "<<nearest_faces[1]<<endl;
 							dist_nearest_faces.clear();
 							mx0=0.;
 							my0=0.;
 							mz0=0.;
-							for(unsigned int nfv=0;nfv<face[nearest_faces[0]].size();nfv++)
-							{
+							for(unsigned int nfv=0;nfv<face[nearest_faces[0]].size();nfv++) {
 								mx0+=vertex(0,face[nearest_faces[0]][nfv]);
 								my0+=vertex(1,face[nearest_faces[0]][nfv]);
 								mz0+=vertex(2,face[nearest_faces[0]][nfv]);
@@ -776,8 +696,7 @@ void pristine::fill(MatrixX3i& point,double d) {
 							mx1=0.;
 							my1=0.;
 							mz1=0.;
-							for(unsigned int nfv=0;nfv<face[nearest_faces[1]].size();nfv++)
-							{
+							for(unsigned int nfv=0;nfv<face[nearest_faces[1]].size();nfv++) {
 								mx1+=vertex(0,face[nearest_faces[1]][nfv]);
 								my1+=vertex(1,face[nearest_faces[1]][nfv]);
 								mz1+=vertex(2,face[nearest_faces[1]][nfv]);
@@ -787,93 +706,43 @@ void pristine::fill(MatrixX3i& point,double d) {
 							mz1=mz1/((double)face[nearest_faces[1]].size());
 							dot_prod1=(mx1-mx0)*nx[nearest_faces[0]]+(my1-my0)*ny[nearest_faces[0]]+(mz1-mz0)*nz[nearest_faces[0]];
 							dot_prod2=(mx0-mx1)*nx[nearest_faces[1]]+(my0-my1)*ny[nearest_faces[1]]+(mz0-mz1)*nz[nearest_faces[1]];
-							if((dot_prod1<0)&&(dot_prod2<0))
-							{
+							if((dot_prod1<0)&&(dot_prod2<0)) {
 								dot_prod1=(i*d-mx0)*nx[nearest_faces[0]]+(j*d-my0)*ny[nearest_faces[0]]+(k*d-mz0)*nz[nearest_faces[0]];
 								dot_prod2=(i*d-mx1)*nx[nearest_faces[1]]+(j*d-my1)*ny[nearest_faces[1]]+(k*d-mz1)*nz[nearest_faces[1]];
 								dot_prod=dot_prod1*dot_prod2;
-								if(dot_prod)
-								{
-									if((dot_prod1<0)&&(dot_prod2<0))
-									{
-										forced_inside=true;
-										//cout<<"< && < Forzato ad entrare <&&<"<<endl;
-									}
-									else
-									{
-										forced_outside=true;
-									}
+								if(dot_prod) {
+									if((dot_prod1<0)&&(dot_prod2<0)) forced_inside=true;
+									else forced_outside=true;
 								}
-								else
-								{
-									if((dot_prod1<0)||(dot_prod2<0)||(dot_prod1==dot_prod2))
-									{
-										forced_inside=true;
-										//cout<<"< && <forzato ad entrare <||<"<<endl;
-									}
-									else
-									{
-										forced_outside=true;
-									}
+								else {
+									if((dot_prod1<0)||(dot_prod2<0)||(dot_prod1==dot_prod2)) forced_inside=true;
+									else forced_outside=true;
 								}
 							}
-							else if ((dot_prod1>0)&&(dot_prod2>0))
-							{
+							else if ((dot_prod1>0)&&(dot_prod2>0)) {
 								dot_prod1=(i*d-mx0)*nx[nearest_faces[0]]+(j*d-my0)*ny[nearest_faces[0]]+(k*d-mz0)*nz[nearest_faces[0]];
 								dot_prod2=(i*d-mx1)*nx[nearest_faces[1]]+(j*d-my1)*ny[nearest_faces[1]]+(k*d-mz1)*nz[nearest_faces[1]];
 								dot_prod=dot_prod1*dot_prod2;
-								if(dot_prod)
-								{
-									if((dot_prod1>0)&&(dot_prod2>0))
-										{
-											forced_outside=true;
-										//cout<<"> && > Forzato ad uscire <&&<"<<endl;
-									}
-									else
-									{
-											forced_inside=true;
-											//cout<<"forzato ad entrare ##"<<endl;
-										}
+								if(dot_prod) {
+									if((dot_prod1>0)&&(dot_prod2>0)) forced_outside=true;
+									else forced_inside=true;
 								}
-								else
-								{
-									if((dot_prod1>0)||(dot_prod2>0)||(dot_prod1==dot_prod2))
-									{
-										forced_inside=true;
-										//cout<<"> && > Forzato ad entrare < || <"<<endl;
-									}
-									else
-									{
-										forced_outside=true;
-									}
+								else {
+									if((dot_prod1>0)||(dot_prod2>0)||(dot_prod1==dot_prod2)) forced_inside=true;
+									else forced_outside=true;
 								}
 							}
-							else
-							{
-								cout<<"Damn vertex "<<"NOOOOOOOOOOOO   dot1 "<<dot_prod1<<"  dot2 "<<dot_prod2<<endl;
-							}
+							else cout<<"Damn vertex  dot1 "<<dot_prod1<<"  dot2 "<<dot_prod2<<endl;
 						}
 					}
 				}
-				if(forced_inside)
-				{
-					//cout<<"Forzo dentro  ";
-					inside=true;
-				}
-				if(forced_outside)
-				{
-					//cout<<"Forzo fuori  ";
-					inside=false;
-				}
-				//if(alert_crossing_vertexes) cout<<"sono dentro "<<inside<<"  forzo dentro "<<forced_inside<<"   forzo fuori "<<forced_outside<<endl;
-				if(inside)
-				{
-					//cout<<"sono dentro e salvo il punto "<<N_point<<" massimo "<<point.rows()<<endl;
+				if(forced_inside) inside=true;
+				if(forced_outside) inside=false;
+				if(inside) {
 					point(N_point,0)=i;
 					point(N_point,1)=j;
 					point(N_point,2)=k;
 					N_point++;
-					//cout<<"ho salvato il punto"<<endl;
 				}
 				change=false;
 //                degeneration=false;
@@ -893,7 +762,7 @@ void pristine::fill(MatrixX3i& point,double d) {
 			alert_crossing_vertexes=false;
 		}
 	}
-	point.conservativeResize(N_point,3);
+	point.conservativeResize(N_point,3); // cut the crap not filled
 	delete nx;
 	delete ny;
 	delete nz;

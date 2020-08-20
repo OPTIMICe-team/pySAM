@@ -115,7 +115,6 @@ void aggregate::translate(Vector3d& T) {
 }
 
 bool aggregate::collide(aggregate& NAP) {
-//    vector<double> distance(64,9e100);
 	double distance=9e100;
 	double provvisional;
 
@@ -123,26 +122,12 @@ bool aggregate::collide(aggregate& NAP) {
 	for(int i=0;i<N;i++) {
 		for(int j=0;j<NAP.N;j++) {
 			provvisional=crystal[i]->distance(NAP.crystal[j]);
-//            if(provvisional<distance[omp_get_thread_num()])
-//            {
-//                distance[omp_get_thread_num()]=provvisional;
-//            }
 			if(provvisional<distance) {
 				distance=provvisional;
 			}
 		}
 	}
-//	provvisional=9e100;
-//	for(int i=0;i<distance.size();i++)
-//	{
-//		if(distance[i]<provvisional)
-//		{
-//			provvisional=distance[i];
-//		}
-//	}
-//    if (provvisional<9e100-1)
 	if(distance<9e99) {
-//    	NAP.translate(0.,0.,-provvisional);
 		NAP.translate(0.0,0.0,-distance);
 		return true;
 	}
@@ -157,9 +142,7 @@ void aggregate::update_mic() {   /// CONTROLLARE /// magari non serve
 	set_Rmax();
 	set_mass();
 	set_Rgyr(); // suppose reset_CM and updated mass
-	//cout<<"Sto per orientare orizzontalmente"<<endl;
 	//orient_horizontally();
-	//cout<<"Orizzontaleggiato"<<endl;
 	set_v();
 	//set_CM();
 	//reset_CM();
@@ -192,20 +175,17 @@ void aggregate::save_aggregate(double d) {
 	Prist_Num.append(extension);
 	ofstream OUT(Prist_Num.c_str());
 	MatrixX3i point;
-	//ofstream OUT2("vertexes.dat");
+
 	for(int i=0; i<N; i++) {
-		//cout<<"riempo "<<i<<endl;
 		crystal[i]->fill(point, d);
-		//cout<<" riempito"<<endl;
-		OUT<<point<<endl;
+		MatrixXi pointID(point.rows(), point.cols()+1);
+		pointID << point, VectorXi::Constant(point.rows(), i);
+		OUT<<pointID<<endl;
 		point.resize(0, 3);
-		//OUT2<<crystal[i]->vertex;
 	}
 	OUT.close();
 	time(&timer_stop);
 	seconds=difftime(timer_stop,timer_start);
-	//////cout<<"Per salvare l'aggregato ho impiegato  "<<seconds<<" secondi"<<endl;
-	//OUT2.close();
 }
 
 void aggregate::update_maximum_dimension() {
@@ -283,21 +263,22 @@ void aggregate::save_vtk_mesh(string prefix) {
 	prefix.append(extension);
 	ofstream OUT(prefix.c_str());
 	OUT<<"# vtk DataFile Version 1.0"<<endl;
-	OUT<<Prist_Num.c_str()<<endl;
+	OUT<<"Ncrystals "<<Prist_Num.c_str()<<" Nfaces ";
 	unsigned int NV=0;
 	unsigned int NF=0;
 	unsigned int TOT=0;
 	for(unsigned int i=0;i<N;i++) {
 		NV+=crystal[i]->N_vertexes;
 		NF+=crystal[i]->N_faces;
+		OUT<<crystal[i]->N_faces<<" ";
 		for(unsigned int j=0;j<crystal[i]->N_faces;j++) {
-			TOT+=(1+crystal[i]->face[j].size());
+			TOT+=(1+crystal[i]->face[j].size()); // I really do not know what TOT is ... seems like sum_crystal(sum_faces(vertexes + 1))
 		}
 	}
-	OUT<<"ASCII"<<endl<<endl<<"DATASET POLYDATA"<<endl<<"POINTS "<<NV<<" float"<<endl;
+	OUT<<endl<<"ASCII"<<endl<<endl<<"DATASET POLYDATA"<<endl<<"POINTS "<<NV<<" float"<<endl;
 	for(unsigned int i=0;i<N;i++) {
 		for(unsigned int j=0;j<crystal[i]->N_vertexes;j++) {
-			OUT<<crystal[i]->vertex.col(j).transpose()<<endl;
+			OUT<<crystal[i]->vertex.col(j).transpose()<<endl; // Increase precision!!
 		}
 	}	
 	OUT<<"POLYGONS "<<NF<<" "<<TOT<<endl;

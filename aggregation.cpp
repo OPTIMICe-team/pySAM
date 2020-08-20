@@ -29,12 +29,12 @@ int main()
 	exponential_distribution<double> distro_exp(1./200.); // la media è 1/k
 	gamma_distribution<double> distro_gamma(20,20); // 10 20
 
-	population pop(2000);
+	population pop(200);
 	//pop.fill_exp(20000,0,distro_exp);
-	pop.fill_gamma(1000,0,distro_gamma);
-	pop.fill_gamma(1000,1,distro_gamma);
-	//pop.fill_gamma(500,2,distro_gamma);
-	//pop.fill_gamma(2000,3,distro_gamma);
+	pop.fill_gamma(50,0,distro_gamma);
+	pop.fill_gamma(50,1,distro_gamma);
+	pop.fill_gamma(100,3,distro_gamma);
+	pop.fill_gamma(100,3,distro_gamma);
 	//pop.fill_uniform(20000,0,distro_uni);
 
     double d=20.; //interdipole spacing
@@ -43,13 +43,11 @@ int main()
     vector<vector<double> > hystogram;
 	time_t cycle_start,cycle_end;
 	time(&cycle_start);
-    for(int i=0;i<2002;i++)
-    {
+    for(int i=0;i<202;i++) {
     	j++;
         pop.make_collision(d);
         cout<<j<<" "<<flush;
-        if(j>=499)
-        {
+        if(j>=10) {
 		time_t start, end;
 		time(&start);
         	par=pop.get_population_parameters();
@@ -58,10 +56,8 @@ int main()
         	cout<<"Distro gamma k= "<<par[0]<<"\t theta= "<<par[1]<<" ho impiegato "<<seconds<<endl;
         	double bin_size=100.;
         	hystogram=pop.get_hystogram(bin_size);
-        	for(int i=0;i<2;i++)
-        	{
-        		for(int j=0;j<hystogram[i].size();j++)
-        		{
+        	for(int i=0;i<2;i++) {
+        		for(int j=0;j<hystogram[i].size();j++) {
         			cout<<hystogram[i][j]<<"\t";
         		}
         		cout<<endl;
